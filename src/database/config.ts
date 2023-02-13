@@ -1,11 +1,12 @@
 import { Client } from "pg";
+import 'dotenv/config'
 
-const client = new Client({
-  user: "User",
-  password: "176767",
-  host: "localhost",
-  database: "m4_sp3",
-  port: 5432,
-});
+const client: Client = new Client({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB,
+  port: parseInt(process.env.DB_PORT!)
+})
 
 export default client;
