@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { QueryConfig } from "pg";
+import { QueryConfig, QueryResult } from "pg";
 import format from "pg-format";
 import { client } from "../database";
 import {
@@ -125,9 +125,37 @@ export const addDeveloperInfos = async (
     });
   }
 
+  const osOptions = ["Windows", "Linux", "MacOS"];
+  const isAOption = osOptions.some((option) => preferredOS === option);
+
+  if (!isAOption) {
+    return response.status(400).json({
+      message: "Invalid OS option.",
+      options: osOptions,
+    });
+  }
+
   const { id: developerId } = request.params;
 
   let queryString: string = `
+    SELECT FROM developer_infos
+    WHERE "developerId" = $1;
+    `;
+
+  let queryConfig: QueryConfig = {
+    text: queryString,
+    values: [developerId],
+  };
+
+  let queryResult: QueryResult = await client.query(queryConfig);
+
+  if (queryResult.rowCount > 0) {
+    return response.status(400).json({
+      message: "Developer infos already exists.",
+    });
+  }
+
+  queryString = `
     INSERT INTO "developer_infos"
       ("developerSince", "preferredOS", "developerId")
     VALUES
@@ -135,12 +163,12 @@ export const addDeveloperInfos = async (
     RETURNING *;
     `;
 
-  let queryConfig: QueryConfig = {
+  queryConfig = {
     text: queryString,
     values: [developerSince, preferredOS, developerId],
   };
 
-  const queryResult: DeveloperInfosResult = await client.query(queryConfig);
+  queryResult = await client.query(queryConfig);
 
   const infoId = queryResult.rows[0].id;
 
@@ -153,11 +181,10 @@ export const addDeveloperInfos = async (
 
   queryConfig = {
     text: queryString,
-    values: [infoId ,developerId],
+    values: [infoId, developerId],
   };
 
-  await client.query(queryConfig)
-
+  await client.query(queryConfig);
 
   return response.status(201).json(queryResult.rows[0]);
 };
@@ -228,15 +255,25 @@ export const updateDeveloperInfos = async (
   const { developerSince, preferredOS } = request.body;
 
   let newData: iDeveloperInfosUpdate = {};
-
+  
   if (developerSince) {
     newData.developerSince = developerSince;
   }
-
+  
   if (preferredOS) {
     newData.preferredOS = preferredOS;
   }
 
+  const osOptions = ["Windows", "Linux", "MacOS"];
+  const isAOption = osOptions.some((option) => preferredOS === option);
+
+  if (!isAOption) {
+    return response.status(400).json({
+      message: "Invalid OS option.",
+      options: osOptions,
+    });
+  }
+  
   const queryString: string = format(
     `
           UPDATE "developer_infos"

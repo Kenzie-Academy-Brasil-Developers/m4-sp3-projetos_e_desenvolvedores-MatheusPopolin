@@ -34,7 +34,7 @@ app.post("/developers", ensureEmailIsUnused, registerDeveloper);
 app.get("/developers", readAllDevelopers);
 app.get("/developers/:id", ensureDeveloperExists, readDeveloper);
 app.get("/developers/:id/projects", ensureDeveloperExists, readDeveloperProjects);
-app.patch("/developers/:id", ensureDeveloperExists, updateDeveloper);
+app.patch("/developers/:id", ensureDeveloperExists, ensureEmailIsUnused, updateDeveloper);
 app.delete("/developers/:id", ensureDeveloperExists, deleteDeveloper);
 app.post("/developers/:id/infos", ensureDeveloperExists, addDeveloperInfos);
 app.patch("/developers/:id/infos", ensureDeveloperExists, updateDeveloperInfos);
@@ -43,13 +43,10 @@ app.patch("/developers/:id/infos", ensureDeveloperExists, updateDeveloperInfos);
 app.post("/projects", ensureDeveloperExists, registerProject);
 app.get("/projects/:id", ensureProjectExists, readProject);
 app.get("/projects", readAllProjects);
-app.patch("/projects/:id", ensureProjectExists, updateProject);
+app.patch("/projects/:id", ensureProjectExists, ensureDeveloperExists, updateProject);
 app.delete("/projects/:id", ensureProjectExists, deleteProject);
-app.post("/projects/:id/technologies", ensureProjectExists, registerProjectTechnology); //arrumar resposta
+app.post("/projects/:id/technologies", ensureProjectExists, registerProjectTechnology); 
 app.delete("/projects/:id/technologies/:name", ensureProjectExists, deleteProjectTechnology);
-
-
-
 
 const PORT: number = 3000;
 const runningMsg: string = `Server running on http://localhost:${PORT}`;
